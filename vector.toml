@@ -1,0 +1,117 @@
+# Vector Configuration for macOS Metrics
+# Collects system metrics and sends them to InfluxDB v2
+# Replacement for Telegraf
+
+# =============================================================================
+#                              DATA DIRECTORY
+# =============================================================================
+data_dir = "/opt/homebrew/var/lib/vector"
+
+# =============================================================================
+#                              SOURCES
+# =============================================================================
+
+# Collect host system metrics (CPU, memory, disk, network, process)
+[sources.host_metrics]
+type = "host_metrics"
+
+# Scrape interval (matches previous Telegraf interval)
+scrape_interval_secs = 5
+
+# Namespace prefix for metrics (default is "host")
+namespace = "host"
+
+# Enable collectors for macOS
+collectors = [
+  "cpu",
+  "memory",
+  "disk",
+  "filesystem",
+  "network",
+  "process",
+  "load"
+]
+
+# Filesystem configuration
+[sources.host_metrics.filesystem]
+# Include root filesystem
+[sources.host_metrics.filesystem.mountpoints]
+includes = ["*"]
+excludes = ["/System/*", "/private/*"]
+
+# Network configuration
+[sources.host_metrics.network]
+[sources.host_metrics.network.devices]
+includes = ["*"]
+excludes = ["lo*", "utun*", "awdl*", "llw*", "bridge*", "gif*", "stf*", "anpi*", "ap*"]
+
+# Process configuration - collect all processes
+[sources.host_metrics.process]
+[sources.host_metrics.process.processes]
+includes = ["*"]
+
+# =============================================================================
+#                              TRANSFORMS
+# =============================================================================
+
+# Add additional tags and enrich process names
+[transforms.add_tags]
+type = "remap"
+inputs = ["host_metrics"]
+source = '''
+# Ensure we have a host tag
+if !exists(.tags.host) {
+  .tags.host = get_hostname!()
+}
+
+# Extract friendly VM name for Parallels processes
+# The command tag contains: ...prl_vm_app --vm-name <VM Name> --uuid {xxx}...
+if .tags.name == "prl_vm_app" {
+  if exists(.tags.command) {
+    parsed, err = parse_regex(.tags.command, r'--vm-name\s+(?P<vm_name>.+?)\s+--uuid')
+    if err == null {
+      .tags.name = parsed.vm_name
+    }
+  }
+}
+'''
+
+# =============================================================================
+#                              SINKS
+# =============================================================================
+
+# Send metrics to InfluxDB v2
+[sinks.influxdb]
+type = "influxdb_metrics"
+inputs = ["add_tags"]
+
+# InfluxDB v2 endpoint (running in Docker on port 8334)
+endpoint = "http://localhost:8334"
+
+# InfluxDB v2 authentication
+org = "myorg"
+bucket = "mybucket"
+token = "mytoken123"
+
+# Default namespace for metrics that don't have one
+default_namespace = "host"
+
+# Batching configuration - optimized to reduce InfluxDB CPU usage
+# Larger batches sent less frequently reduce write overhead
+[sinks.influxdb.batch]
+max_events = 5000
+timeout_secs = 10
+
+# Buffer configuration
+[sinks.influxdb.buffer]
+type = "memory"
+max_events = 20000
+when_full = "block"
+
+# Request configuration - reduced concurrency to avoid parallel write spikes
+[sinks.influxdb.request]
+concurrency = 2
+timeout_secs = 60
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 10
+
