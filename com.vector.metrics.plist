@@ -9,7 +9,7 @@
     <array>
         <string>/opt/homebrew/bin/vector</string>
         <string>--config</string>
-        <string>/Users/dev345/code/kfirfer/dotfiles/mac/metrics/vector.toml</string>
+        <string>/Users/dev345/code/kfirfer/monitor-mac/vector.toml</string>
     </array>
 
     <key>RunAtLoad</key>
