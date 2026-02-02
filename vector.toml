@@ -74,6 +74,19 @@ if .tags.name == "prl_vm_app" {
     }
   }
 }
+
+# Sanitize command tag for process metrics - truncate long commands and remove
+# problematic characters that cause InfluxDB line protocol parsing errors
+if exists(.tags.command) {
+  cmd = string!(.tags.command)
+  # Truncate to 200 chars max to avoid InfluxDB parsing issues
+  if length(cmd) > 200 {
+    cmd = slice!(cmd, 0, 200)
+  }
+  # Replace problematic characters (newlines, special chars) with underscore
+  cmd = replace(cmd, r'[\n\r\t]', "_")
+  .tags.command = cmd
+}
 '''
 
 # =============================================================================
