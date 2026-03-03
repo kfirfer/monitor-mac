@@ -1,6 +1,6 @@
 # monitor-mac
 
-A lightweight macOS system monitoring stack that collects host metrics and visualizes them in real time. Built with [Vector](https://vector.dev), [InfluxDB](https://www.influxdata.com), and [Grafana](https://grafana.com) — designed to run locally with minimal setup.
+A lightweight, open-source alternative to [iStat Menus](https://bjango.com/mac/istatmenus/) — with full historical data and dashboards. Built with [Vector](https://vector.dev), [InfluxDB](https://www.influxdata.com), and [Grafana](https://grafana.com), it collects host metrics and visualizes them in real time, designed to run locally with minimal setup.
 
 ## What It Does
 
