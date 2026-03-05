@@ -115,7 +115,7 @@ done and change accordingely.
 
 
 Review all the codebase, write INFLUXDB_UPGRADE_TO_VERSION_3.md file that will explain how to:
-Upgrade existing influxdb to version 3.
+Upgrade existing influxdb to version 3 stable.
 The data of influxdb 2 can be deleted. Migration is not required. but if there is any important configuration that should be migrated please mention it in the file.
 Ensure that the new implementation is modular, maintainable, and production-ready.
 The plan should be detailed and cover all aspects of the feature.
