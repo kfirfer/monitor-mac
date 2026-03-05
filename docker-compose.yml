@@ -1,20 +1,21 @@
 services:
   influxdb:
-    image: influxdb:2-alpine
+    image: influxdb:3-core
     container_name: influxdb
     restart: unless-stopped
     ports:
-      - "8334:8086"
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword123
-      - DOCKER_INFLUXDB_INIT_ORG=myorg
-      - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken123
-      - DOCKER_INFLUXDB_INIT_RETENTION=7d
+      - "8334:8181"
+    command:
+      - influxdb3
+      - serve
+      - --node-id=node0
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --plugin-dir=/var/lib/influxdb3/plugins
+      - --without-auth
     volumes:
-      - influxdb-data:/var/lib/influxdb2
+      - influxdb3-data:/var/lib/influxdb3/data
+      - influxdb3-plugins:/var/lib/influxdb3/plugins
 
   grafana:
     image: grafana/grafana:12.3.1
@@ -39,5 +40,6 @@ services:
       - influxdb
 
 volumes:
-  influxdb-data:
+  influxdb3-data:
+  influxdb3-plugins:
   grafana-data:

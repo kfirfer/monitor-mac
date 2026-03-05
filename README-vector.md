@@ -4,7 +4,7 @@ This document describes the Vector.dev configuration for collecting macOS system
 
 ## Overview
 
-Vector replaces Telegraf as the metrics collection agent. It runs natively on macOS and sends metrics to InfluxDB 2.x running in Docker.
+Vector replaces Telegraf as the metrics collection agent. It runs natively on macOS and sends metrics to InfluxDB 3 Core running in Docker (via v2 compatibility API).
 
 ## Installation
 

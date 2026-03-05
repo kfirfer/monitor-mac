@@ -1,6 +1,6 @@
 # monitor-mac
 
-A lightweight, open-source alternative to [iStat Menus](https://bjango.com/mac/istatmenus/) — with full historical data and dashboards. Built with [Vector](https://vector.dev), [InfluxDB](https://www.influxdata.com), and [Grafana](https://grafana.com), it collects host metrics and visualizes them in real time, designed to run locally with minimal setup.
+A lightweight, open-source alternative to [iStat Menus](https://bjango.com/mac/istatmenus/) — with full historical data and dashboards. Built with [Vector](https://vector.dev), [InfluxDB 3 Core](https://www.influxdata.com), and [Grafana](https://grafana.com), it collects host metrics and visualizes them in real time, designed to run locally with minimal setup.
 
 ## What It Does
 
@@ -21,7 +21,7 @@ Vector (macOS host)  ──▶  InfluxDB (Docker)  ──▶  Grafana (Docker)
    collect metrics         store time-series        visualize
 ```
 
-Vector runs natively on macOS (not in Docker) because it needs direct access to system metrics. InfluxDB and Grafana run as Docker containers.
+Vector runs natively on macOS (not in Docker) because it needs direct access to system metrics. InfluxDB 3 Core and Grafana run as Docker containers.
 
 | Component  | Port  | URL                        |
 |------------|-------|----------------------------|
@@ -49,7 +49,7 @@ cd monitor-mac
 docker compose up -d
 ```
 
-This starts InfluxDB and Grafana with auto-provisioned datasources and dashboards. Data is retained for 7 days.
+This starts InfluxDB 3 Core and Grafana with auto-provisioned datasources and dashboards.
 
 ### 3. Install and start Vector
 
@@ -111,13 +111,12 @@ All configuration lives in the repository root:
 
 | Setting | Value |
 |---------|-------|
-| InfluxDB org | `myorg` |
-| InfluxDB bucket | `mybucket` |
-| InfluxDB token | `mytoken123` |
+| InfluxDB database | `mybucket` |
 | Scrape interval | 5 seconds |
-| Data retention | 7 days |
 
 These are local development defaults. Change them in `docker-compose.yml`, `vector.toml`, and `grafana/provisioning/datasources/datasource.yml` if needed.
+
+> **Note:** InfluxDB 3 Core does not support automatic data retention. Data grows indefinitely, which is suitable for local monitoring. To manage data size, periodically delete old data via SQL `DELETE` queries.
 
 ## Troubleshooting
 

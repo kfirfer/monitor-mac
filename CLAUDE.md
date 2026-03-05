@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a macOS system metrics monitoring stack using Vector + InfluxDB + Grafana. Vector runs natively on macOS to collect metrics, while InfluxDB and Grafana run in Docker containers.
+This is a macOS system metrics monitoring stack using Vector + InfluxDB 3 Core + Grafana. Vector runs natively on macOS to collect metrics, while InfluxDB and Grafana run in Docker containers.
 
 ## Commands
 
@@ -49,13 +49,13 @@ tail -f /tmp/vector.err
 **Data flow:** Vector (host) → InfluxDB (container:8334) → Grafana (container:3046)
 
 - **Vector** runs on the host machine (not containerized) because it needs direct access to macOS system metrics
-- **InfluxDB 2.x** stores time-series data, exposed on port 8334 (maps to internal 8086)
+- **InfluxDB 3 Core** stores time-series data, exposed on port 8334 (maps to internal 8181). Uses SQL as primary query language.
 - **Grafana** visualizes metrics, exposed on port 3046 (maps to internal 3000), configured for anonymous admin access
 
 ## Configuration
 
 - Vector config: `vector.toml`
-- InfluxDB org: `myorg`, bucket: `mybucket`, token: `mytoken123`
+- InfluxDB database: `mybucket` (auth disabled for local use)
 - Grafana datasource is auto-provisioned via `grafana/provisioning/datasources/datasource.yml`
 - Dashboard is auto-provisioned from `grafana/dashboards/macos-metrics.json`
 
