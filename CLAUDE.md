@@ -67,3 +67,7 @@ Vector collects via `host_metrics` source: CPU, memory, disk, filesystem, networ
 
 - Grafana: http://localhost:3046 (no login required)
 - InfluxDB: http://localhost:8334
+
+## Critical Rules
+
+Never run git commands.
