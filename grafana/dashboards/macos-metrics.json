@@ -109,7 +109,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "WITH pcts AS (\n  SELECT time, mode,\n    value / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY cpu, mode ORDER BY time))) * 100.0 AS pct\n  FROM \"host.cpu_seconds_total\"\n  WHERE $__timeFilter(time)\n    AND mode IN ('user', 'system', 'idle')\n)\nSELECT\n  date_bin('$__interval', time) AS time,\n  mode,\n  AVG(pct) AS value\nFROM pcts\nWHERE pct IS NOT NULL\nGROUP BY date_bin('$__interval', time), mode\nORDER BY time",
+          "rawSql": "WITH pcts AS (\n  SELECT time, mode,\n    value / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY cpu, mode ORDER BY time))) * 100.0 AS pct\n  FROM \"host.cpu_seconds_total\"\n  WHERE $__timeFilter(time)\n    AND mode IN ('user', 'system', 'idle')\n)\nSELECT\n  date_bin($__interval, time) AS time,\n  mode,\n  AVG(pct) AS value\nFROM pcts\nWHERE pct IS NOT NULL\nGROUP BY date_bin($__interval, time), mode\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
@@ -301,7 +301,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  CONCAT(device, ' - ', filesystem, ' - ', mountpoint) AS metric,\n  AVG(value * 100.0) AS value\nFROM \"host.filesystem_used_ratio\"\nWHERE\n  $__timeFilter(time)\n  AND mountpoint != '/dev'\nGROUP BY date_bin('$__interval', time), device, filesystem, mountpoint\nORDER BY time",
+          "rawSql": "SELECT\n  date_bin($__interval, time) AS time,\n  CONCAT(device, ' - ', filesystem, ' - ', mountpoint) AS metric,\n  AVG(value * 100.0) AS value\nFROM \"host.filesystem_used_ratio\"\nWHERE\n  $__timeFilter(time)\n  AND mountpoint != '/dev'\nGROUP BY date_bin($__interval, time), device, filesystem, mountpoint\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
@@ -397,7 +397,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "WITH rx_rates AS (\n  SELECT time, device,\n    GREATEST((value - LAG(value) OVER (PARTITION BY device ORDER BY time))\n    / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY device ORDER BY time))), 0.0) AS rate\n  FROM \"host.network_receive_bytes_total\"\n  WHERE $__timeFilter(time)\n),\ntx_rates AS (\n  SELECT time, device,\n    GREATEST((value - LAG(value) OVER (PARTITION BY device ORDER BY time))\n    / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY device ORDER BY time))), 0.0) AS rate\n  FROM \"host.network_transmit_bytes_total\"\n  WHERE $__timeFilter(time)\n)\nSELECT date_bin('$__interval', time) AS time, CONCAT(device, ' rx') AS metric, AVG(rate) AS value\nFROM rx_rates WHERE rate IS NOT NULL\nGROUP BY date_bin('$__interval', time), device\nUNION ALL\nSELECT date_bin('$__interval', time) AS time, CONCAT(device, ' tx') AS metric, AVG(rate) AS value\nFROM tx_rates WHERE rate IS NOT NULL\nGROUP BY date_bin('$__interval', time), device\nORDER BY time",
+          "rawSql": "WITH rx_rates AS (\n  SELECT time, device,\n    GREATEST((value - LAG(value) OVER (PARTITION BY device ORDER BY time))\n    / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY device ORDER BY time))), 0.0) AS rate\n  FROM \"host.network_receive_bytes_total\"\n  WHERE $__timeFilter(time)\n),\ntx_rates AS (\n  SELECT time, device,\n    GREATEST((value - LAG(value) OVER (PARTITION BY device ORDER BY time))\n    / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY device ORDER BY time))), 0.0) AS rate\n  FROM \"host.network_transmit_bytes_total\"\n  WHERE $__timeFilter(time)\n)\nSELECT date_bin($__interval, time) AS time, CONCAT(device, ' rx') AS metric, AVG(rate) AS value\nFROM rx_rates WHERE rate IS NOT NULL\nGROUP BY date_bin($__interval, time), device\nUNION ALL\nSELECT date_bin($__interval, time) AS time, CONCAT(device, ' tx') AS metric, AVG(rate) AS value\nFROM tx_rates WHERE rate IS NOT NULL\nGROUP BY date_bin($__interval, time), device\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
@@ -719,7 +719,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  'load1' AS metric,\n  AVG(value) AS value\nFROM \"host.load1\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'load5' AS metric,\n  AVG(value) AS value\nFROM \"host.load5\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'load15' AS metric,\n  AVG(value) AS value\nFROM \"host.load15\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nORDER BY time",
+          "rawSql": "SELECT\n  date_bin($__interval, time) AS time,\n  'load1' AS metric,\n  AVG(value) AS value\nFROM \"host.load1\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time)\nUNION ALL\nSELECT\n  date_bin($__interval, time) AS time,\n  'load5' AS metric,\n  AVG(value) AS value\nFROM \"host.load5\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time)\nUNION ALL\nSELECT\n  date_bin($__interval, time) AS time,\n  'load15' AS metric,\n  AVG(value) AS value\nFROM \"host.load15\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time)\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
@@ -817,7 +817,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  'active' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_active_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'available' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_available_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'free' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_free_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nORDER BY time",
+          "rawSql": "SELECT\n  date_bin($__interval, time) AS time,\n  'active' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_active_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time)\nUNION ALL\nSELECT\n  date_bin($__interval, time) AS time,\n  'available' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_available_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time)\nUNION ALL\nSELECT\n  date_bin($__interval, time) AS time,\n  'free' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_free_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time)\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
@@ -915,7 +915,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_cpu_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time), name\nORDER BY time",
+          "rawSql": "SELECT\n  date_bin($__interval, time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_cpu_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time), name\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
@@ -1013,7 +1013,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_memory_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time), name\nORDER BY time",
+          "rawSql": "SELECT\n  date_bin($__interval, time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_memory_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time), name\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
