@@ -113,3 +113,29 @@ device="/dev/disk3s1s1" - filesystem="apfs" - mountpoint="/"
 ❯ I have some issue with the dashboard or metrics.. i get to see "prl_vm_app" at the panel "CPU Usage per Process Over Time" and "Memory Usage per Process Over Time"..  but i want to see the name of the process such as the image:   please check with perplexity mcp what can be         
 done and change accordingely.   
 
+
+Review all the codebase, write INFLUXDB_UPGRADE_TO_VERSION_3.md file that will explain how to:
+Upgrade existing influxdb to version 3.
+The data of influxdb 2 can be deleted. Migration is not required. but if there is any important configuration that should be migrated please mention it in the file.
+Ensure that the new implementation is modular, maintainable, and production-ready.
+The plan should be detailed and cover all aspects of the feature.
+Use sequential thinking to analyze the requirements and create a comprehensive implementation plan.
+Break down the project into logical phases, tasks, and subtasks with clear deliverables and dependencies.
+Automatically leverage Context7 MCP for retrieving documentation, code examples, best practices, and external guidance when planning.
+Use Perplexity Ask MCP automatically to search official documentation or authoritative sources whenever encountering unfamiliar tools or concepts.
+Create a structured task hierarchy that includes:
+* High-level phases (major project milestones).
+* Individual tasks within each phase (specific work items).
+* Subtasks for complex tasks (granular implementation steps).
+For each one have a status indicator "[ ]" with empty being not started, "[/]" in progress, "[X]" done
+ultrathink
+
+
+"The plan file is @INFLUXDB_UPGRADE_TO_VERSION_3.md
+1. proceed with the plan
+2. if the plan file has a status indicator on the task mark it respectively when starting and when done.
+3. adhere to the rules and best practices
+- Automatically leverage Context7 MCP for retrieving documentation, code examples, best practices, and external guidance before beginning any task.
+- Use Perplexity MCP automatically to search official documentation or authoritative sources whenever encountering unfamiliar tools or concepts.
+  Output <promise>FINISHED COMPLETELY</promise> when all tasks at @INFLUXDB_UPGRADE_TO_VERSION_3.md marked as done." --completion-promise "FINISHED COMPLETELY" --max-iterations 5
+
