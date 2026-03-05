@@ -164,7 +164,7 @@ These values from the current InfluxDB 2 setup should be carried forward (adapte
 - [x] 7.4 Commit and merge
   - [x] 7.4.1 Review all changes
   - [x] 7.4.2 Commit with descriptive message
-  - [ ] 7.4.3 Merge upgrade branch to main
+  - [x] 7.4.3 Merge upgrade branch to main
 
 ---
 
