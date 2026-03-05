@@ -115,7 +115,16 @@
         }
       ],
       "title": "CPU Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -307,7 +316,16 @@
         }
       ],
       "title": "Disk Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -403,7 +421,16 @@
         }
       ],
       "title": "Network Traffic",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -492,7 +519,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -604,7 +633,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -700,7 +731,11 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": ["mean", "max", "last"],
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
@@ -725,7 +760,16 @@
         }
       ],
       "title": "System Load Average",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -798,7 +842,11 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["mean", "max", "last"],
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
@@ -823,7 +871,16 @@
         }
       ],
       "title": "Memory Details",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -896,7 +953,11 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["mean", "max", "last"],
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
@@ -921,7 +982,16 @@
         }
       ],
       "title": "CPU Usage per Process Over Time",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -994,7 +1064,11 @@
       "id": 12,
       "options": {
         "legend": {
-          "calcs": ["mean", "max", "last"],
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
@@ -1019,11 +1093,24 @@
         }
       ],
       "title": "Memory Usage per Process Over Time",
-      "type": "timeseries"
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^value (.+)$",
+            "renamePattern": "$1"
+          }
+        }
+      ]
     }
   ],
   "schemaVersion": 42,
-  "tags": ["macos", "vector", "system"],
+  "tags": [
+    "macos",
+    "vector",
+    "system"
+  ],
   "templating": {
     "list": []
   },
