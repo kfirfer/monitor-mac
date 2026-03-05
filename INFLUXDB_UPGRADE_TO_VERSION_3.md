@@ -161,9 +161,9 @@ These values from the current InfluxDB 2 setup should be carried forward (adapte
   - [x] 7.2.3 Update `CLAUDE.md` with new configuration details
 - [x] 7.3 Remove legacy Telegraf config
   - [x] 7.3.1 Delete `telegraf.conf` (leftover from pre-Vector setup)
-- [ ] 7.4 Commit and merge
-  - [ ] 7.4.1 Review all changes
-  - [ ] 7.4.2 Commit with descriptive message
+- [x] 7.4 Commit and merge
+  - [x] 7.4.1 Review all changes
+  - [x] 7.4.2 Commit with descriptive message
   - [ ] 7.4.3 Merge upgrade branch to main
 
 ---
