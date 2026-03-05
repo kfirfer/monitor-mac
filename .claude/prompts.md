@@ -121,7 +121,7 @@ Ensure that the new implementation is modular, maintainable, and production-read
 The plan should be detailed and cover all aspects of the feature.
 Use sequential thinking to analyze the requirements and create a comprehensive implementation plan.
 Break down the project into logical phases, tasks, and subtasks with clear deliverables and dependencies.
-Automatically leverage Context7 MCP for retrieving documentation, code examples, best practices, and external guidance when planning.
+Automatically leverage Exa MCP for retrieving documentation, code examples, best practices, and external guidance when planning.
 Use Perplexity Ask MCP automatically to search official documentation or authoritative sources whenever encountering unfamiliar tools or concepts.
 Create a structured task hierarchy that includes:
 * High-level phases (major project milestones).
