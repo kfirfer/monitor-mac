@@ -109,8 +109,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.cpu_seconds_total\")\n  |> filter(fn: (r) => r.mode == \"user\" or r.mode == \"system\" or r.mode == \"idle\")\n  |> derivative(unit: 1s, nonNegative: true)\n  |> map(fn: (r) => ({r with _value: r._value * 100.0}))\n  |> group(columns: [\"_time\", \"mode\"])\n  |> sum()\n  |> group(columns: [\"mode\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
-          "refId": "A"
+          "rawSql": "WITH pcts AS (\n  SELECT time, mode,\n    value / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY cpu, mode ORDER BY time))) * 100.0 AS pct\n  FROM \"host.cpu_seconds_total\"\n  WHERE $__timeFilter(time)\n    AND mode IN ('user', 'system', 'idle')\n)\nSELECT\n  date_bin('$__interval', time) AS time,\n  mode,\n  AVG(pct) AS value\nFROM pcts\nWHERE pct IS NOT NULL\nGROUP BY date_bin('$__interval', time), mode\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "CPU Usage",
@@ -204,8 +205,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "total = from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.memory_total_bytes\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n\nused = from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.memory_active_bytes\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n\njoin(tables: {total: total, used: used}, on: [\"_time\"])\n  |> map(fn: (r) => ({_time: r._time, _value: (r._value_used / r._value_total) * 100.0, _field: \"used\"}))\n  |> group(columns: [\"_field\"])\n  |> yield(name: \"used\")",
-          "refId": "A"
+          "rawSql": "SELECT\n  t.time,\n  (a.value / t.value) * 100.0 AS value,\n  'used' AS metric\nFROM \"host.memory_total_bytes\" t\nINNER JOIN \"host.memory_active_bytes\" a ON t.time = a.time\nWHERE $__timeFilter(t.time)\nORDER BY t.time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "Memory Usage",
@@ -299,8 +301,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.filesystem_used_ratio\")\n  |> filter(fn: (r) => r.mountpoint != \"/dev\")\n  |> map(fn: (r) => ({_time: r._time, _value: r._value * 100.0, _field: r.device + \" - \" + r.filesystem + \" - \" + r.mountpoint}))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
-          "refId": "A"
+          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  CONCAT(device, ' - ', filesystem, ' - ', mountpoint) AS metric,\n  AVG(value * 100.0) AS value\nFROM \"host.filesystem_used_ratio\"\nWHERE\n  $__timeFilter(time)\n  AND mountpoint != '/dev'\nGROUP BY date_bin('$__interval', time), device, filesystem, mountpoint\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "Disk Usage",
@@ -394,8 +397,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.network_receive_bytes_total\" or r._measurement == \"host.network_transmit_bytes_total\")\n  |> map(fn: (r) => ({r with direction: if r._measurement == \"host.network_receive_bytes_total\" then \"rx\" else \"tx\"}))\n  |> group(columns: [\"device\", \"direction\"])\n  |> derivative(unit: 1s, nonNegative: true)\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: r.device + \" \" + r.direction}))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
-          "refId": "A"
+          "rawSql": "WITH rx_rates AS (\n  SELECT time, device,\n    GREATEST((value - LAG(value) OVER (PARTITION BY device ORDER BY time))\n    / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY device ORDER BY time))), 0.0) AS rate\n  FROM \"host.network_receive_bytes_total\"\n  WHERE $__timeFilter(time)\n),\ntx_rates AS (\n  SELECT time, device,\n    GREATEST((value - LAG(value) OVER (PARTITION BY device ORDER BY time))\n    / EXTRACT(EPOCH FROM (time - LAG(time) OVER (PARTITION BY device ORDER BY time))), 0.0) AS rate\n  FROM \"host.network_transmit_bytes_total\"\n  WHERE $__timeFilter(time)\n)\nSELECT date_bin('$__interval', time) AS time, CONCAT(device, ' rx') AS metric, AVG(rate) AS value\nFROM rx_rates WHERE rate IS NOT NULL\nGROUP BY date_bin('$__interval', time), device\nUNION ALL\nSELECT date_bin('$__interval', time) AS time, CONCAT(device, ' tx') AS metric, AVG(rate) AS value\nFROM tx_rates WHERE rate IS NOT NULL\nGROUP BY date_bin('$__interval', time), device\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "Network Traffic",
@@ -458,7 +462,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "_value"
+              "options": "value"
             },
             "properties": [
               {
@@ -505,8 +509,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.process_cpu_usage\")\n  |> keep(columns: [\"_time\", \"_value\", \"name\"])\n  |> group(columns: [\"name\"])\n  |> last()\n  |> group()\n  |> sort(columns: [\"_value\"], desc: true)\n  |> limit(n: 500)\n  |> keep(columns: [\"name\", \"_value\"])",
-          "refId": "A"
+          "rawSql": "SELECT name, value\nFROM \"host.process_cpu_usage\"\nWHERE $__timeFilter(time)\n  AND time = (SELECT MAX(time) FROM \"host.process_cpu_usage\" WHERE $__timeFilter(time))\nORDER BY value DESC\nLIMIT 500",
+          "refId": "A",
+          "format": "table"
         }
       ],
       "title": "CPU Usage per Process (Top 500)",
@@ -569,7 +574,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "_value"
+              "options": "value"
             },
             "properties": [
               {
@@ -616,8 +621,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.process_memory_usage\")\n  |> keep(columns: [\"_time\", \"_value\", \"name\"])\n  |> group(columns: [\"name\"])\n  |> last()\n  |> group()\n  |> sort(columns: [\"_value\"], desc: true)\n  |> limit(n: 500)\n  |> keep(columns: [\"name\", \"_value\"])",
-          "refId": "A"
+          "rawSql": "SELECT name, value\nFROM \"host.process_memory_usage\"\nWHERE $__timeFilter(time)\n  AND time = (SELECT MAX(time) FROM \"host.process_memory_usage\" WHERE $__timeFilter(time))\nORDER BY value DESC\nLIMIT 500",
+          "refId": "A",
+          "format": "table"
         }
       ],
       "title": "Memory Usage per Process (Top 500)",
@@ -713,8 +719,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.load1\" or r._measurement == \"host.load5\" or r._measurement == \"host.load15\")\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: if r._measurement == \"host.load1\" then \"load1\" else if r._measurement == \"host.load5\" then \"load5\" else \"load15\"}))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
-          "refId": "A"
+          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  'load1' AS metric,\n  AVG(value) AS value\nFROM \"host.load1\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'load5' AS metric,\n  AVG(value) AS value\nFROM \"host.load5\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'load15' AS metric,\n  AVG(value) AS value\nFROM \"host.load15\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "System Load Average",
@@ -810,8 +817,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.memory_active_bytes\" or r._measurement == \"host.memory_available_bytes\" or r._measurement == \"host.memory_free_bytes\")\n  |> map(fn: (r) => ({_time: r._time, _value: r._value, _field: if r._measurement == \"host.memory_active_bytes\" then \"active\" else if r._measurement == \"host.memory_available_bytes\" then \"available\" else \"free\"}))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
-          "refId": "A"
+          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  'active' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_active_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'available' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_available_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nUNION ALL\nSELECT\n  date_bin('$__interval', time) AS time,\n  'free' AS metric,\n  AVG(value) AS value\nFROM \"host.memory_free_bytes\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time)\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "Memory Details",
@@ -861,7 +869,6 @@
               "mode": "off"
             }
           },
-          "displayName": "${__field.labels.name}",
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -908,8 +915,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.process_cpu_usage\")\n  |> keep(columns: [\"_time\", \"_value\", \"name\"])\n  |> group(columns: [\"name\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: true)\n  |> fill(value: 0.0)",
-          "refId": "A"
+          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_cpu_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time), name\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "CPU Usage per Process Over Time",
@@ -959,7 +967,6 @@
               "mode": "off"
             }
           },
-          "displayName": "${__field.labels.name}",
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1006,8 +1013,9 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "query": "from(bucket: \"mybucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"host.process_memory_usage\")\n  |> keep(columns: [\"_time\", \"_value\", \"name\"])\n  |> group(columns: [\"name\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)",
-          "refId": "A"
+          "rawSql": "SELECT\n  date_bin('$__interval', time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_memory_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin('$__interval', time), name\nORDER BY time",
+          "refId": "A",
+          "format": "time_series"
         }
       ],
       "title": "Memory Usage per Process Over Time",

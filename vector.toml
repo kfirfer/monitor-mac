@@ -1,6 +1,5 @@
 # Vector Configuration for macOS Metrics
-# Collects system metrics and sends them to InfluxDB v2
-# Replacement for Telegraf
+# Collects system metrics and sends them to InfluxDB 3 Core (via v2 compatibility API)
 
 # =============================================================================
 #                              DATA DIRECTORY
@@ -93,18 +92,18 @@ if exists(.tags.command) {
 #                              SINKS
 # =============================================================================
 
-# Send metrics to InfluxDB v2
+# Send metrics to InfluxDB 3 Core (via v2 compatibility API)
 [sinks.influxdb]
 type = "influxdb_metrics"
 inputs = ["add_tags"]
 
-# InfluxDB v2 endpoint (running in Docker on port 8334)
+# InfluxDB 3 endpoint (running in Docker on port 8334)
 endpoint = "http://localhost:8334"
 
-# InfluxDB v2 authentication
+# InfluxDB v2 compatibility - bucket maps to database name in v3
 org = "myorg"
 bucket = "mybucket"
-token = "mytoken123"
+token = "unused"
 
 # Default namespace for metrics that don't have one
 default_namespace = "host"

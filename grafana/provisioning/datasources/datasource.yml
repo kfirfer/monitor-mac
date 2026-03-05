@@ -6,13 +6,14 @@ datasources:
     uid: influxdb-macos
     access: proxy
     orgId: 1
-    url: http://influxdb:8086
+    url: http://influxdb:8181
+    database: mybucket
     jsonData:
-      version: Flux
-      organization: myorg
-      defaultBucket: mybucket
-      tlsSkipVerify: true
+      version: SQL
+      insecureGrpc: true
+      metadata:
+        - database: mybucket
     secureJsonData:
-      token: mytoken123
+      token: unused
     isDefault: true
     editable: false
