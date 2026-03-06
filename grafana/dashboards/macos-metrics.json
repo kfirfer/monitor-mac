@@ -976,7 +976,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "SELECT\n  date_bin($__interval, time) AS time,\n  name AS metric,\n  AVG(value) AS value\nFROM \"host.process_cpu_usage\"\nWHERE $__timeFilter(time)\nGROUP BY date_bin($__interval, time), name\nORDER BY time",
+          "rawSql": "WITH top_procs AS (\n  SELECT name\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING COUNT(*) > 1\n)\nSELECT\n  date_bin($__interval, p.time) AS time,\n  p.name AS metric,\n  AVG(p.value) AS value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN top_procs t ON p.name = t.name\nWHERE $__timeFilter(p.time)\nGROUP BY date_bin($__interval, p.time), p.name\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
