@@ -23,5 +23,8 @@
 
     <key>StandardErrorPath</key>
     <string>/tmp/vector.err</string>
+
+    <key>ExitTimeOut</key>
+    <integer>10</integer>
 </dict>
 </plist>
