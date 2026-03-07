@@ -44,6 +44,22 @@ launchctl list | grep vector
 tail -f /tmp/vector.err
 ```
 
+### Graceful Shutdown Hook
+
+A LaunchAgent daemon (`com.monitor.shutdown.plist`) traps SIGTERM on macOS shutdown to gracefully stop Docker containers, preventing InfluxDB WAL corruption.
+
+```bash
+# Install
+ln -sf $(pwd)/com.monitor.shutdown.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.monitor.shutdown.plist
+
+# Check status
+launchctl list | grep com.monitor.shutdown
+
+# View logs
+cat /tmp/shutdown-hook.log
+```
+
 ## Architecture
 
 **Data flow:** Vector (host) → InfluxDB (container:8334) → Grafana (container:3046)
