@@ -14,10 +14,13 @@
     <true/>
 
     <key>KeepAlive</key>
-    <true/>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
 
     <key>ExitTimeOut</key>
-    <integer>25</integer>
+    <integer>10</integer>
 
     <key>StandardOutPath</key>
     <string>/tmp/shutdown-hook-agent.log</string>

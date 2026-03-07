@@ -11,7 +11,7 @@ log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >>"$LOG"; }
 cleanup() {
     log "Received shutdown signal, stopping monitoring containers..."
     cd /Users/dev345/code/kfirfer/monitor-mac || { log "ERROR: Cannot cd to project dir"; exit 1; }
-    /Users/dev345/.orbstack/bin/docker compose stop >>"$LOG" 2>&1 || log "WARN: docker compose stop failed"
+    /Users/dev345/.orbstack/bin/docker compose stop -t 8 >>"$LOG" 2>&1 || log "WARN: docker compose stop failed"
     log "Shutdown hook completed"
     exit 0
 }
