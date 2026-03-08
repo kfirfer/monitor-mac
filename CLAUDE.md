@@ -84,6 +84,10 @@ Vector collects via `host_metrics` source: CPU, memory, disk, filesystem, networ
 - Grafana: http://localhost:3046 (no login required)
 - InfluxDB: http://localhost:8334
 
+## Playwright MCP
+
+The Playwright MCP server is available for troubleshooting the Grafana dashboard at http://localhost:3046/d/macos-metrics/macos-metrics. Use it to navigate, inspect, and debug dashboard issues interactively.
+
 ## Critical Rules
 
 Never run git commands.
