@@ -538,7 +538,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "WITH non_stale AS (\n  SELECT name\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING MAX(value) - MIN(value) > 0.001\n)\nSELECT p.name, p.value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN non_stale ns ON p.name = ns.name\nWHERE $__timeFilter(p.time)\n  AND p.time = (SELECT MAX(time) FROM \"host.process_cpu_usage\" WHERE $__timeFilter(time))\nORDER BY p.value DESC\nLIMIT 500",
+          "rawSql": "WITH active_procs AS (\n  SELECT name\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING COUNT(*) > 1 AND MAX(value) - MIN(value) > 0.001\n)\nSELECT p.name, p.value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN active_procs ap ON p.name = ap.name\nWHERE $__timeFilter(p.time)\n  AND p.time = (SELECT MAX(time) FROM \"host.process_cpu_usage\" WHERE $__timeFilter(time))\nORDER BY p.value DESC\nLIMIT 500",
           "refId": "A",
           "format": "table"
         }
@@ -976,7 +976,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "WITH non_stale AS (\n  SELECT name\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING COUNT(*) > 1 AND MAX(value) - MIN(value) > 0.001\n)\nSELECT\n  date_bin($__interval, p.time) AS time,\n  p.name AS metric,\n  AVG(p.value) AS value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN non_stale ns ON p.name = ns.name\nWHERE $__timeFilter(p.time)\nGROUP BY date_bin($__interval, p.time), p.name\nORDER BY time",
+          "rawSql": "WITH ranked AS (\n  SELECT name, ROW_NUMBER() OVER (ORDER BY SUM(value) DESC) AS rn\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING COUNT(*) > 1 AND MAX(value) - MIN(value) > 0.001\n),\ntop_procs AS (\n  SELECT name FROM ranked WHERE rn <= 15\n)\nSELECT\n  date_bin($__interval, p.time) AS time,\n  p.name AS metric,\n  AVG(p.value) AS value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN top_procs tp ON p.name = tp.name\nWHERE $__timeFilter(p.time)\nGROUP BY date_bin($__interval, p.time), p.name\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
