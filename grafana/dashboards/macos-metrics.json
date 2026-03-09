@@ -976,7 +976,7 @@
             "type": "influxdb",
             "uid": "influxdb-macos"
           },
-          "rawSql": "WITH ranked AS (\n  SELECT name, ROW_NUMBER() OVER (ORDER BY SUM(value) DESC) AS rn\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING COUNT(*) > 1 AND MAX(value) - MIN(value) > 0.001\n),\ntop_procs AS (\n  SELECT name FROM ranked WHERE rn <= 15\n)\nSELECT\n  date_bin($__interval, p.time) AS time,\n  p.name AS metric,\n  AVG(p.value) AS value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN top_procs tp ON p.name = tp.name\nWHERE $__timeFilter(p.time)\nGROUP BY date_bin($__interval, p.time), p.name\nORDER BY time",
+          "rawSql": "WITH ranked AS (\n  SELECT name, ROW_NUMBER() OVER (ORDER BY SUM(value) DESC) AS rn\n  FROM \"host.process_cpu_usage\"\n  WHERE $__timeFilter(time)\n  GROUP BY name\n  HAVING COUNT(*) > 1 AND MAX(value) - MIN(value) > 0.001\n),\ntop_procs AS (\n  SELECT name FROM ranked WHERE rn <= 15\n)\nSELECT\n  date_bin_gapfill($__interval, p.time) AS time,\n  p.name AS metric,\n  COALESCE(AVG(p.value), 0) AS value\nFROM \"host.process_cpu_usage\" p\nINNER JOIN top_procs tp ON p.name = tp.name\nWHERE $__timeFilter(p.time)\nGROUP BY date_bin_gapfill($__interval, p.time), p.name\nORDER BY time",
           "refId": "A",
           "format": "time_series"
         }
