@@ -145,7 +145,7 @@ Review all the codebase, write FIX_MONITORING_PLAN.md file that will explain how
 For some unknown reason, the metrics not shown:
 http://localhost:3046/d/macos-metrics/macos-metrics?orgId=1&from=now-6h&to=now&timezone=browser
 use playwright mcp to see it yourself.
-and check root cause. with purposal of permanent fix.
+and check root cause. with purposeful of permanent fix.
 Ensure that the new implementation is modular, maintainable, and production-ready.
 The plan should be detailed and cover all aspects of the feature.
 Use sequential thinking to analyze the requirements and create a comprehensive implementation plan.
