@@ -11,6 +11,7 @@ datasources:
     jsonData:
       version: SQL
       insecureGrpc: true
+      timeInterval: "5s"
       metadata:
         - database: mybucket
     secureJsonData:

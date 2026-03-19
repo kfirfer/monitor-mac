@@ -10,6 +10,11 @@ data_dir = "/opt/homebrew/var/lib/vector"
 #                              SOURCES
 # =============================================================================
 
+# Expose Vector internal metrics for pipeline health monitoring
+[sources.internal_metrics]
+type = "internal_metrics"
+scrape_interval_secs = 30
+
 # Collect host system metrics (CPU, memory, disk, network, process)
 [sources.host_metrics]
 type = "host_metrics"
@@ -95,7 +100,7 @@ if exists(.tags.command) {
 # Send metrics to InfluxDB 3 Core (via v2 compatibility API)
 [sinks.influxdb]
 type = "influxdb_metrics"
-inputs = ["add_tags"]
+inputs = ["add_tags", "internal_metrics"]
 
 # InfluxDB 3 endpoint (running in Docker on port 8334)
 endpoint = "http://localhost:8334"
@@ -122,8 +127,8 @@ when_full = "block"
 
 # Request configuration - reduced concurrency to avoid parallel write spikes
 [sinks.influxdb.request]
-concurrency = 2
+concurrency = 1
 timeout_secs = 60
-retry_initial_backoff_secs = 1
-retry_max_duration_secs = 10
+retry_initial_backoff_secs = 5
+retry_max_duration_secs = 60
 
