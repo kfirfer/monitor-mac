@@ -139,3 +139,32 @@ ultrathink
 - Use Perplexity MCP automatically to search official documentation or authoritative sources whenever encountering unfamiliar tools or concepts.
   Output <promise>FINISHED COMPLETELY</promise> when all tasks at @INFLUXDB_UPGRADE_TO_VERSION_3.md marked as done." --completion-promise "FINISHED COMPLETELY" --max-iterations 5
 
+
+
+Review all the codebase, write FIX_MONITORING_PLAN.md file that will explain how to:
+For some unknown reason, the metrics not shown:
+http://localhost:3046/d/macos-metrics/macos-metrics?orgId=1&from=now-6h&to=now&timezone=browser
+use playwright mcp to see it yourself.
+and check root cause. with purposal of permanent fix.
+Ensure that the new implementation is modular, maintainable, and production-ready.
+The plan should be detailed and cover all aspects of the feature.
+Use sequential thinking to analyze the requirements and create a comprehensive implementation plan.
+Break down the project into logical phases, tasks, and subtasks with clear deliverables and dependencies.
+Automatically leverage Exa MCP for retrieving documentation, code examples, best practices, and external guidance when planning.
+Use Perplexity Ask MCP automatically to search official documentation or authoritative sources whenever encountering unfamiliar tools or concepts.
+Create a structured task hierarchy that includes:
+* High-level phases (major project milestones).
+* Individual tasks within each phase (specific work items).
+* Subtasks for complex tasks (granular implementation steps).
+For each one have a status indicator "[ ]" with empty being not started, "[/]" in progress, "[X]" done
+ultrathink
+
+
+"The plan file is @FIX_MONITORING_PLAN.md
+1. proceed with the plan
+2. if the plan file has a status indicator on the task mark it respectively when starting and when done.
+3. adhere to the rules and best practices
+- Automatically leverage Context7 MCP for retrieving documentation, code examples, best practices, and external guidance before beginning any task.
+- Use Perplexity MCP automatically to search official documentation or authoritative sources whenever encountering unfamiliar tools or concepts.
+  Output <promise>FINISHED COMPLETELY</promise> when all tasks at @FIX_MONITORING_PLAN.md marked as done." --completion-promise "FINISHED COMPLETELY" --max-iterations 5
+
