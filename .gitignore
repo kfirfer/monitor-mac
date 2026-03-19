@@ -2,4 +2,8 @@
 *.iml
 venv
 .playwright-mcp/
+.chunkhound.json
+.chunkhound/
+
+ralph-loop.local.md
 
