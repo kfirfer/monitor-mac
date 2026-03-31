@@ -1,4 +1,13 @@
 services:
+  influxdb-volume-init:
+    image: busybox
+    container_name: influxdb-volume-init
+    restart: "no"
+    volumes:
+      - influxdb3-data:/var/lib/influxdb3/data
+      - influxdb3-plugins:/var/lib/influxdb3/plugins
+    command: chown -R 1500:1500 /var/lib/influxdb3/data /var/lib/influxdb3/plugins
+
   influxdb:
     image: influxdb:3-core
     container_name: influxdb
@@ -6,6 +15,9 @@ services:
     stop_grace_period: 8s
     ports:
       - "8334:8181"
+    depends_on:
+      influxdb-volume-init:
+        condition: service_completed_successfully
     command:
       - influxdb3
       - serve
@@ -26,6 +38,18 @@ services:
     volumes:
       - influxdb3-data:/var/lib/influxdb3/data
       - influxdb3-plugins:/var/lib/influxdb3/plugins
+
+  influxdb-init:
+    image: influxdb:3-core
+    container_name: influxdb-init
+    restart: "no"
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "influxdb3 create database mybucket
+      --host http://influxdb:8181
+      --retention-period 2w 2>/dev/null || true"
 
   grafana:
     image: grafana/grafana:12.3.1
