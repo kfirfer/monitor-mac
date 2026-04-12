@@ -91,3 +91,5 @@ The Playwright MCP server is available for troubleshooting the Grafana dashboard
 ## Critical Rules
 
 Never run git commands.
+
+@.claude.local.md
