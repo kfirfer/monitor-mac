@@ -60,6 +60,29 @@ launchctl list | grep com.monitor.shutdown
 cat /tmp/shutdown-hook.log
 ```
 
+### Parquet Pruning (Scheduled)
+
+A LaunchAgent (`com.monitor.prune.plist`) runs daily at 3 AM to remove parquet files older than 7 days, preventing InfluxDB query-file-limit issues.
+
+```bash
+# Install
+ln -sf $(pwd)/com.monitor.prune.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.monitor.prune.plist
+
+# Manual run
+./scripts/prune-parquet.sh 7
+
+# View logs
+cat /tmp/parquet-prune.log
+```
+
+### WAL Recovery
+
+If InfluxDB fails to start due to corrupt WAL files, run:
+```bash
+./scripts/fix-wal.sh
+```
+
 ## Architecture
 
 **Data flow:** Vector (host) → InfluxDB (container:8334) → Grafana (container:3046)
@@ -71,7 +94,8 @@ cat /tmp/shutdown-hook.log
 ## Configuration
 
 - Vector config: `vector.toml`
-- InfluxDB database: `mybucket` (auth disabled for local use)
+- InfluxDB database: `mybucket` (auth disabled for local use, 2-week retention)
+- Vector scrape interval: 5 seconds
 - Grafana datasource is auto-provisioned via `grafana/provisioning/datasources/datasource.yml`
 - Dashboard is auto-provisioned from `grafana/dashboards/macos-metrics.json`
 
