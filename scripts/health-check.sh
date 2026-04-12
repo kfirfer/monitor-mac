@@ -33,21 +33,39 @@ if [ "$INFLUX_STATUS" = "running" ]; then
 fi
 
 # 3. Check Vector process
-if ! launchctl list | grep -q com.vector.metrics 2>/dev/null; then
+# Use `launchctl list LABEL` (exits 113 if missing) instead of piping to grep —
+# `grep -q` early-exits on match, causing SIGPIPE 141 under `set -o pipefail`
+# which produced persistent "Vector not running" false positives.
+if ! launchctl list com.vector.metrics > /dev/null 2>&1; then
     log "ALERT: Vector not running. Restarting..."
     launchctl load ~/Library/LaunchAgents/com.vector.metrics.plist 2>/dev/null || true
     ISSUES=$((ISSUES + 1))
 fi
 
 # 4. Check data freshness (last write within 5 minutes)
+# Parses the MAX(time) timestamp and compares to wall clock. Triggers recovery
+# on stalls — Vector can sit alive with no data flowing (see 2026-04-12 outage).
 if curl -sf http://localhost:8334/health > /dev/null 2>&1; then
     LATEST=$(curl -s "http://localhost:8334/api/v3/query_sql?db=mybucket&q=SELECT+MAX(time)+as+latest+FROM+%22host.load1%22" 2>/dev/null || true)
-    if echo "$LATEST" | grep -q "latest"; then
-        # Data exists — pipeline is flowing
-        :
-    else
-        log "WARN: No recent data found in InfluxDB. Pipeline may be stalled."
+    LATEST_TS=$(printf '%s' "$LATEST" | sed -nE 's/.*"latest":"([^"]+)".*/\1/p')
+
+    if [ -z "$LATEST_TS" ]; then
+        log "WARN: No data found in InfluxDB (host.load1 empty or query failed). Response: $LATEST"
         ISSUES=$((ISSUES + 1))
+    else
+        LATEST_EPOCH=$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "${LATEST_TS%.*}" +%s 2>/dev/null || echo "0")
+        NOW_EPOCH=$(date -u +%s)
+        AGE=$((NOW_EPOCH - LATEST_EPOCH))
+        if [ "$LATEST_EPOCH" -eq 0 ]; then
+            log "WARN: Could not parse latest timestamp: $LATEST_TS"
+            ISSUES=$((ISSUES + 1))
+        elif [ "$AGE" -gt 300 ]; then
+            log "ALERT: Data is stale (${AGE}s old, latest=$LATEST_TS). Restarting Vector..."
+            launchctl unload ~/Library/LaunchAgents/com.vector.metrics.plist 2>/dev/null || true
+            sleep 2
+            launchctl load ~/Library/LaunchAgents/com.vector.metrics.plist 2>/dev/null || true
+            ISSUES=$((ISSUES + 1))
+        fi
     fi
 fi
 

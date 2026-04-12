@@ -7,6 +7,15 @@
 data_dir = "/opt/homebrew/var/lib/vector"
 
 # =============================================================================
+#                              API
+# =============================================================================
+# Enables `vector top` and the GraphQL introspection endpoint so silent stalls
+# can be diagnosed (see 2026-04-12 outage where process was alive but idle).
+[api]
+enabled = true
+address = "127.0.0.1:8686"
+
+# =============================================================================
 #                              SOURCES
 # =============================================================================
 
@@ -119,11 +128,14 @@ default_namespace = "host"
 max_events = 5000
 timeout_secs = 10
 
-# Buffer configuration — disk buffer persists metrics during InfluxDB outages
+# Buffer configuration — disk buffer persists metrics during InfluxDB outages.
+# `drop_newest` avoids the failure mode where a full buffer silently halts the
+# entire pipeline (2026-04-12 outage). Dropping recent metrics is preferable to
+# a silent monitoring blackout on a local stack.
 [sinks.influxdb.buffer]
 type = "disk"
-max_size = 268435488  # 256MB disk buffer
-when_full = "block"
+max_size = 268435488  # ~256MB — Vector's minimum disk-buffer size (rejects smaller values)
+when_full = "drop_newest"
 
 # Request configuration - reduced concurrency to avoid parallel write spikes
 [sinks.influxdb.request]
