@@ -128,6 +128,38 @@ Make sure the Docker containers are running: `docker compose ps`
 2. Verify InfluxDB is reachable: `curl http://localhost:8334/health`
 3. Confirm Vector is sending data: run `vector --config vector.toml` in the foreground and watch for errors
 
+**InfluxDB crash loop (container keeps restarting)**
+
+This typically happens due to corrupt WAL or snapshot files from an unclean shutdown.
+
+```bash
+# Quick recovery — removes corrupt files and restarts everything
+./scripts/fix-wal.sh
+
+# Dry-run mode — shows what would be deleted
+./scripts/fix-wal.sh --dry-run
+```
+
+If the automated script doesn't fix it (nuclear option):
+```bash
+docker compose stop influxdb
+docker run --rm -v monitor-mac_influxdb3-data:/data busybox rm -rf /data/node0/wal /data/node0/snapshots
+docker compose up -d influxdb
+```
+
+**Health check monitoring**
+
+A health check script runs every 5 minutes to auto-detect and recover from InfluxDB crash loops and Vector outages:
+
+```bash
+# Install the health check LaunchAgent
+ln -sf "$(pwd)/com.monitor.health.plist" ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.monitor.health.plist
+
+# View health check logs
+cat /tmp/health-check.log
+```
+
 **LaunchAgent not starting**
 ```bash
 # Check status

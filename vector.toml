@@ -119,10 +119,10 @@ default_namespace = "host"
 max_events = 5000
 timeout_secs = 10
 
-# Buffer configuration
+# Buffer configuration — disk buffer persists metrics during InfluxDB outages
 [sinks.influxdb.buffer]
-type = "memory"
-max_events = 20000
+type = "disk"
+max_size = 268435488  # 256MB disk buffer
 when_full = "block"
 
 # Request configuration - reduced concurrency to avoid parallel write spikes

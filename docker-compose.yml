@@ -29,6 +29,9 @@ services:
       - --query-file-limit=5000
       - --wal-snapshot-size=100
       - --snapshotted-wal-files-to-keep=50
+      # Note: --wal-replay-fail-on-error is intentionally NOT set.
+      # Default behavior already skips corrupt WAL files on replay.
+      # The flag is a boolean toggle that would ENABLE fail-on-error if present.
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8181/health"]
       interval: 30s
