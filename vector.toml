@@ -128,13 +128,16 @@ default_namespace = "host"
 max_events = 5000
 timeout_secs = 10
 
-# Buffer configuration — disk buffer persists metrics during InfluxDB outages.
-# `drop_newest` avoids the failure mode where a full buffer silently halts the
-# entire pipeline (2026-04-12 outage). Dropping recent metrics is preferable to
-# a silent monitoring blackout on a local stack.
+# Memory buffer, not disk. Disk buffer + `drop_newest` is a permanent-blackout
+# trap: once the on-disk FIFO fills during an InfluxDB stall, every new metric
+# is dropped while Vector slowly replays stale data from yesterday, and the
+# buffer survives restarts so health-check restarts can't recover it
+# (2026-04-13 outage). Memory buffer is cleared on restart, so the health-check
+# restart loop actually works as a recovery mechanism. A brief InfluxDB blip
+# costs ~a minute of metrics, which is acceptable for a local stack.
 [sinks.influxdb.buffer]
-type = "disk"
-max_size = 268435488  # ~256MB — Vector's minimum disk-buffer size (rejects smaller values)
+type = "memory"
+max_events = 50000
 when_full = "drop_newest"
 
 # Request configuration - reduced concurrency to avoid parallel write spikes
