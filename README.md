@@ -84,6 +84,36 @@ Vector logs are written to `/tmp/vector.log` and `/tmp/vector.err`.
 
 > **Note:** The included plist references the config path `/Users/dev345/code/kfirfer/monitor-mac/vector.toml`. Update it to match your local clone path.
 
+### 5. (Optional) Graceful shutdown hook
+
+A LaunchAgent that traps `SIGTERM` on macOS shutdown and gracefully stops the Docker containers, preventing InfluxDB WAL corruption from unclean shutdowns:
+
+```bash
+ln -sf "$(pwd)/com.monitor.shutdown.plist" ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.monitor.shutdown.plist
+
+# Verify it's running
+launchctl list | grep com.monitor.shutdown
+
+# View logs
+cat /tmp/shutdown-hook.log
+```
+
+### 6. (Optional) Scheduled parquet pruning
+
+A LaunchAgent that runs daily at 3 AM and removes parquet files older than 7 days, preventing InfluxDB query-file-limit issues as data accumulates:
+
+```bash
+ln -sf "$(pwd)/com.monitor.prune.plist" ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.monitor.prune.plist
+
+# Manual run (retention in days)
+./scripts/prune-parquet.sh 7
+
+# View logs
+cat /tmp/parquet-prune.log
+```
+
 ## Stopping
 
 ```bash
@@ -92,6 +122,10 @@ docker compose down
 
 # If Vector is running via LaunchAgent
 launchctl unload ~/Library/LaunchAgents/com.vector.metrics.plist
+
+# If the shutdown hook / prune agents are installed
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.monitor.shutdown.plist
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.monitor.prune.plist
 ```
 
 ## Configuration
@@ -106,6 +140,9 @@ All configuration lives in the repository root:
 | `grafana/provisioning/dashboards/dashboard.yml` | Dashboard provisioning config |
 | `grafana/dashboards/macos-metrics.json` | Pre-built Grafana dashboard |
 | `com.vector.metrics.plist` | macOS LaunchAgent for auto-starting Vector |
+| `com.monitor.health.plist` | LaunchAgent: every-5-minute health check & auto-recovery |
+| `com.monitor.shutdown.plist` | LaunchAgent: graceful Docker stop on macOS shutdown (SIGTERM) |
+| `com.monitor.prune.plist` | LaunchAgent: daily 3 AM parquet pruning (>7 days old) |
 
 ### Defaults
 
