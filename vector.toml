@@ -29,7 +29,7 @@ scrape_interval_secs = 30
 type = "host_metrics"
 
 # Scrape interval (matches previous Telegraf interval)
-scrape_interval_secs = 5
+scrape_interval_secs = 10
 
 # Namespace prefix for metrics (default is "host")
 namespace = "host"

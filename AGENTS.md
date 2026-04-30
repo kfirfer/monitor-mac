@@ -60,6 +60,50 @@ launchctl list | grep com.monitor.shutdown
 cat /tmp/shutdown-hook.log
 ```
 
+### Parquet Pruning (Scheduled)
+
+A LaunchAgent (`com.monitor.prune.plist`) runs daily at 3 AM to remove parquet files older than 7 days, preventing InfluxDB query-file-limit issues.
+
+```bash
+# Install
+ln -sf $(pwd)/com.monitor.prune.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.monitor.prune.plist
+
+# Manual run
+./scripts/prune-parquet.sh 7
+
+# View logs
+cat /tmp/parquet-prune.log
+```
+
+### WAL Recovery
+
+If InfluxDB fails to start due to corrupt WAL/snapshot/catalog files, run:
+```bash
+./scripts/fix-wal.sh
+```
+
+Dry-run mode (shows what would be deleted without deleting):
+```bash
+./scripts/fix-wal.sh --dry-run
+```
+
+### Health Check
+
+A LaunchAgent (`com.monitor.health.plist`) runs every 5 minutes to check pipeline health and auto-recover from InfluxDB crash loops.
+
+```bash
+# Install
+ln -sf $(pwd)/com.monitor.health.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.monitor.health.plist
+
+# Manual run
+./scripts/health-check.sh
+
+# View logs
+cat /tmp/health-check.log
+```
+
 ## Architecture
 
 **Data flow:** Vector (host) → InfluxDB (container:8334) → Grafana (container:3046)
@@ -71,7 +115,8 @@ cat /tmp/shutdown-hook.log
 ## Configuration
 
 - Vector config: `vector.toml`
-- InfluxDB database: `mybucket` (auth disabled for local use)
+- InfluxDB database: `mybucket` (auth disabled for local use, 2-week retention)
+- Vector scrape interval: 5 seconds
 - Grafana datasource is auto-provisioned via `grafana/provisioning/datasources/datasource.yml`
 - Dashboard is auto-provisioned from `grafana/dashboards/macos-metrics.json`
 
@@ -88,6 +133,35 @@ Vector collects via `host_metrics` source: CPU, memory, disk, filesystem, networ
 
 The Playwright MCP server is available for troubleshooting the Grafana dashboard at http://localhost:3046/d/macos-metrics/macos-metrics. Use it to navigate, inspect, and debug dashboard issues interactively.
 
+## Common Issues
+
+### InfluxDB Crash Loop (`serde_json error: EOF`)
+1. Check: `docker compose ps` shows influxdb "Restarting"
+2. Fix: `./scripts/fix-wal.sh` (auto-stops Vector, removes corrupt 0-byte WAL/JSON/parquet files, restarts everything)
+3. Root cause: Corrupt WAL/snapshot files from unclean shutdown (macOS sleep, power loss, OOM)
+
+### Vector "Connection refused" to InfluxDB
+1. InfluxDB is likely down — check `docker compose ps`
+2. If crash loop, run `./scripts/fix-wal.sh`
+3. If InfluxDB is healthy but Vector still fails, restart Vector: `launchctl unload ~/Library/LaunchAgents/com.vector.metrics.plist && launchctl load ~/Library/LaunchAgents/com.vector.metrics.plist`
+
+### Grafana "No data" on All Panels
+1. Check InfluxDB health: `curl http://localhost:8334/health`
+2. Check Vector is running: `launchctl list | grep vector`
+3. Check data freshness: look at "Data Freshness" panel (bottom of dashboard)
+4. If stale, follow InfluxDB crash loop recovery above
+
+### Full Pipeline Restart
+```bash
+launchctl unload ~/Library/LaunchAgents/com.vector.metrics.plist
+docker compose down
+docker compose up -d
+# Wait for InfluxDB to be healthy
+launchctl load ~/Library/LaunchAgents/com.vector.metrics.plist
+```
+
 ## Critical Rules
 
 Never run git commands.
+
+@.claude.local.md

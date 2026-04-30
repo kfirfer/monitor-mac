@@ -4,7 +4,7 @@ A lightweight, open-source alternative to [iStat Menus](https://bjango.com/mac/i
 
 ## What It Does
 
-Collects system-level metrics from your Mac every 5 seconds and displays them on a pre-built Grafana dashboard:
+Collects system-level metrics from your Mac every 10 seconds and displays them on a pre-built Grafana dashboard:
 
 - **CPU** — usage by mode (user, system, idle) with threshold alerts
 - **Memory** — total, active, available, and free
@@ -149,7 +149,7 @@ All configuration lives in the repository root:
 | Setting | Value |
 |---------|-------|
 | InfluxDB database | `mybucket` |
-| Scrape interval | 5 seconds |
+| Scrape interval | 10 seconds |
 
 These are local development defaults. Change them in `docker-compose.yml`, `vector.toml`, and `grafana/provisioning/datasources/datasource.yml` if needed.
 

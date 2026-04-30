@@ -116,7 +116,7 @@ cat /tmp/health-check.log
 
 - Vector config: `vector.toml`
 - InfluxDB database: `mybucket` (auth disabled for local use, 2-week retention)
-- Vector scrape interval: 5 seconds
+- Vector scrape interval: 10 seconds
 - Grafana datasource is auto-provisioned via `grafana/provisioning/datasources/datasource.yml`
 - Dashboard is auto-provisioned from `grafana/dashboards/macos-metrics.json`
 

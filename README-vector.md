@@ -55,7 +55,7 @@ Key configuration in `vector.toml`:
 ```toml
 [sources.host_metrics]
 type = "host_metrics"
-scrape_interval_secs = 5
+scrape_interval_secs = 10
 namespace = "host"
 collectors = ["cpu", "memory", "disk", "filesystem", "network", "process", "load"]
 
