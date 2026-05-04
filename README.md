@@ -186,7 +186,7 @@ docker compose up -d influxdb
 
 **Health check monitoring**
 
-A health check script runs every 5 minutes to auto-detect and recover from InfluxDB crash loops and Vector outages:
+A health check script runs every 5 minutes to auto-detect and recover from InfluxDB crash loops, Grafana stops, and Vector outages:
 
 ```bash
 # Install the health check LaunchAgent
