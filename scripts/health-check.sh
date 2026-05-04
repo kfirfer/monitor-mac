@@ -32,7 +32,18 @@ if [ "$INFLUX_STATUS" = "running" ]; then
     fi
 fi
 
-# 3. Check Vector process
+# 3. Check Grafana container status
+GRAFANA_STATUS=$(docker inspect grafana --format='{{.State.Status}}' 2>/dev/null || echo "not_found")
+if [ "$GRAFANA_STATUS" != "running" ]; then
+    log "WARN: Grafana not running (status: $GRAFANA_STATUS). Attempting restart..."
+    cd /Users/dev345/code/kfirfer/monitor-mac && docker compose up -d grafana >> "$LOG" 2>&1
+    ISSUES=$((ISSUES + 1))
+elif ! curl -sf http://localhost:3046/api/health > /dev/null 2>&1; then
+    log "WARN: Grafana running but health endpoint not responding."
+    ISSUES=$((ISSUES + 1))
+fi
+
+# 4. Check Vector process
 # Use `launchctl list LABEL` (exits 113 if missing) instead of piping to grep —
 # `grep -q` early-exits on match, causing SIGPIPE 141 under `set -o pipefail`
 # which produced persistent "Vector not running" false positives.
@@ -42,7 +53,7 @@ if ! launchctl list com.vector.metrics > /dev/null 2>&1; then
     ISSUES=$((ISSUES + 1))
 fi
 
-# 4. Check data freshness (last write within 5 minutes)
+# 5. Check data freshness (last write within 5 minutes)
 # Parses the MAX(time) timestamp and compares to wall clock. Triggers recovery
 # on stalls — Vector can sit alive with no data flowing (see 2026-04-12 outage).
 if curl -sf http://localhost:8334/health > /dev/null 2>&1; then
