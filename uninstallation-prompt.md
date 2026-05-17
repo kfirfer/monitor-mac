@@ -7,7 +7,7 @@ This includes:
   - `com.monitor.shutdown.plist` — `launchctl bootout gui/$(id -u)`
   - `com.monitor.prune.plist` — `launchctl bootout gui/$(id -u)`
 - Stop and remove the Docker containers and their data: `docker compose down -v` (this removes the `monitor-mac_influxdb3-data`, `monitor-mac_influxdb3-plugins`, and `monitor-mac_grafana-data` volumes so InfluxDB time-series data and Grafana state are wiped).
-- Remove the corresponding Docker images if no longer used by any other container: `influxdb:3-core`, `grafana/grafana:12.3.1`, and `busybox` (check with `docker image ls` and remove via `docker image rm <image>`; skip any image still referenced by another container on the host).
+- Remove the corresponding Docker images if no longer used by any other container: `influxdb:3-core` and `grafana/grafana:12.3.1` (check with `docker image ls` and remove via `docker image rm <image>`; skip any image still referenced by another container on the host).
 - Uninstall Vector: `brew uninstall vector` and optionally `brew untap vectordotdev/brew`.
 - Remove leftover log files in `/tmp/`: `vector.log`, `vector.err`, `shutdown-hook.log`, `parquet-prune.log`, `health-check.log`.
 - Verify nothing remains: `launchctl list | grep -E 'vector|monitor'` returns nothing, `docker compose ps` is empty, and ports 8334 and 3046 are no longer listening.
